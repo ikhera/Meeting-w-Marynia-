@@ -1,0 +1,112 @@
+#Goals, Objectives and Research Question 
+
+#Background and Motivation
+
+#Data Sources, Spatio-temporal scale 
+
+#Methods used
+
+#Results 
+
+#Discussion of results 
+
+#Limitations, future work and conclusions
+
+#installing packages
+install.packages("sf")
+install.packages("raster")
+install.packages("dplyr")
+install.packages("spData")
+install.packages("tmap")
+install.packages("leaflet")
+install.packages("ggplot2")
+install.packages("shiny")
+install.packages("leaflet")
+install.packages("rgdal")
+
+
+#adding libraries
+library(sf)
+library(raster)
+library(dplyr)
+library(spData)
+library(tmap)
+library(leaflet)
+library(ggplot2)
+library(shiny)
+library(leaflet)
+library(rgdal)
+
+
+#Calling in the chicago boundaries shapefile using read OGR
+chicago.boundaries<-readOGR("/cloud/project/GIS Final/Shape File/geo_export_9a2737c4-fc5a-4162-b9c2-0048bd7d4022.shp")
+
+#Setting the Basemap of Chicago in Leaflet
+
+m<-leaflet() #making the map widget
+  setView(lng=87.6237, lat=41.8796, zoom = 12)
+ m %>% addTiles() %>% #adding the basemap
+   addPolygons(data=chicago.boundaries) #adding my chicago boundaries polygon layer
+ m
+ 
+
+
+
+#Adding the chicago boundaries into the leaflet basemap 
+
+
+# Create dataframe of favorite places
+chicago.favorites <- data.frame(id = c(1, 2, 3, 4),
+                             name = c("name1", "name2", "name3", "name4"),
+                             description = c("desc1", "desc2", "desc3", "desc4"),
+                             lat = c(0.0, 0.0, 0.0, 0.0),
+                             lon = c(0.0, 0.0, 0.0, 0.0), stringsAsFactors = FALSE
+)
+
+#Add specifics into the data frame
+chicago.favorites[1, 2:5] <- list("Ghareeb Nawaz", "My favorite Indian restaurant in Chicago - a go to spot whenever I'm homesick!.", 41.99805883999633, -87.68154970380972)
+chicago.favorites[2, 2:5] <- list("The Point", "My favorite place to spend a summer day", 41.795726593627904, -87.5766198745897)
+chicago.favorites[3,2:5]<- list("Calumet Fisheries", "The best fish in Chicago",41.722741972010404, -87.54401691778193)
+chicago.favorites[4,2:5]<-list("The WBEZ Office", "A place I'm very thankful  to work at!", 41.89162575230983, -87.6048816736015)
+
+## ---------------------------
+## UI SECTION
+ui <- fluidPage(
+    sidebarLayout(
+        sidebarPanel(h2("Indi's Favorite Places in Chicago"), width = 3),
+        mainPanel(fluidRow(leafletOutput("map"), width = 9),
+                  br(),
+                  fluidRow(h3(textOutput("This is a map of some of my favorite places in Chicago"))))
+    )
+)
+
+## ---------------------------
+## SERVER SECTION
+server <- function(input, output, session){
+    # Inputs
+    clickData <- reactiveValues(clickedMarker = NULL)
+    
+    observeEvent(input$map_marker_click, {
+        clickData$clickedMarker <- input$map_marker_click
+    })
+    
+    # Outputs 
+    
+
+    output$map <- renderLeaflet({
+        leaflet(data = chicago.favorites) %>%
+            addTiles() %>%  
+            addCircleMarkers(lng = ~lon, lat = ~lat, popup = ~name, layerId = ~id)
+    })
+    
+    output$text <- renderText({
+        if (is.null(clickData$clickedMarker)) {
+            return(NULL)
+        }
+        return(chicago.favorites[chicago.favoritse$id == clickData$clickedMarker$id, ]$description)
+    })
+}
+
+## ---------------------------
+## Create / render Shiny app
+shinyApp(ui = ui, server = server)
